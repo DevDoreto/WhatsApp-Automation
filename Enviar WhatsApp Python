@@ -1,0 +1,46 @@
+import pandas as pd
+
+contatos_df = pd.read_excel("Contatos.xlsx")
+display(contatos_df)
+
+from selenium import webdriver
+from selenium.webdriver.common.keys import Keys
+import time
+import urllib
+from urllib.parse import urlparse
+from selenium.webdriver.common.action_chains import ActionChains
+import os
+
+navegador = webdriver.Chrome()
+navegador.get("https://web.whatsapp.com/")  
+while len(navegador.find_elements('id', 'side')) < 1:
+    time.sleep(1)
+time.sleep(2)
+
+for linha in contatos_df.index:
+    #eu quero enviar uma mensagem  
+    nome = contatos_df.loc[linha, "pessoa"]
+    mensagem = contatos_df.loc[linha, "mensagem"]
+    arquivo = contatos_df.loc[linha, "arquivo"]
+    telefone = contatos_df.loc[linha, "numero"]
+    texto = urllib.parse.quote(f"Olá{nome}!{mensagem}")
+    link = f"https://web.whatsapp.com/send?phone={telefone}&text={texto}"
+    
+    navegador.get(link)
+    while len(navegador.find_elements('id', 'side')) < 1:
+        time.sleep(1)
+    time.sleep(2)
+        
+       # verificar se um número é invalido   
+    if len(navegador.find_elements('xpath', '//*[@id="app"]/div/span[2]/div/span/div/div/div/div/div/div[1]')) < 1:
+        time.sleep(2)
+        navegador.find_element('xpath', '//*[@id="main"]/footer/div[1]/div/span[2]/div/div[2]/div[2]/button/span').click()
+        
+        if arquivo != "n":
+            caminho_completo = os.path.abspath(f"midia/{arquivo}")
+            navegador.find_element('xpath', '//*[@id="main"]/footer/div[1]/div/span[2]/div/div[1]/div[2]/div/div/div/span').click()
+            navegador.find_element('xpath', '//*[@id="main"]/footer/div[1]/div/span[2]/div/div[1]/div[2]/div/span/div/ul/div/div[2]/li/div/input').send_keys(caminho_completo)
+            time.sleep(2)
+            navegador.find_element('xpath', '//*[@id="app"]/div/div/div[3]/div[2]/span/div/span/div/div/div[2]/div/div[1]/div[3]/div/div/div[2]/div[1]/div[1]/p').send_keys(Keys.ENTER)
+   
+    time.sleep(5)
